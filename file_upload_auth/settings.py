@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
+import logging
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
@@ -37,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'hawkrest',
     'file_upload_auth.index',
     'file_upload_auth.upload',
 )
@@ -50,7 +52,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'hawkrest.middleware.HawkResponseMiddleware',
 )
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 ROOT_URLCONF = 'file_upload_auth.urls'
 
@@ -102,3 +107,76 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'base': {
+            '()': 'logging.Formatter',
+            'format': '%(name)s:%(levelname)s '
+                      '%(message)s :%(pathname)s:%(lineno)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            '()': logging.StreamHandler,
+            'formatter': 'base',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True
+        },
+        'hawkrest': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'mohawk': {
+            'handlers': ['console'],
+            # Set this to DEBUG for any Hawk auth debugging.
+            'level': 'INFO',
+            'propagate': True,
+        },
+    }
+}
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework.parsers.JSONParser',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'hawkrest.HawkAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework.filters.DjangoFilterBackend',
+    ),
+    'PAGINATE_BY': 20,
+    'PAGINATE_BY_PARAM': 'limit'
+}
+
+
+HAWK_CREDENTIALS = {
+    'script-user': {
+        'id': 'script-user',
+        'key': 'secret-key',
+        'algorithm': 'sha256'
+    },
+}

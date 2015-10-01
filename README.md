@@ -1,5 +1,6 @@
 Run this to build and start the container(s):
 
+    docker-compose build
     docker-compose up -d
 
 Find your IP somehow (maybe like this):
